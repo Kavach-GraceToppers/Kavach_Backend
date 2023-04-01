@@ -11,7 +11,7 @@ def insert_report(nature: str, location: str, alert_level: str, clip_location: s
         "alert_level": alert_level,
         "clip_location": clip_location
     })
-    report_id = report.inserted_id
+    report_id = str(report.inserted_id)
     print("Inserted: " + str(report_id))
     return report_id
 

@@ -9,7 +9,7 @@ def insert_user(email: str, phone_no: str, role: str, password: str):
         "role": role,
         "password": password
     })
-    user_id = user.inserted_id
+    user_id = str(user.inserted_id)
     print("Inserted: " + str(user_id))
     return user_id
 
