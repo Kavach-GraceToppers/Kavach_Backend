@@ -6,8 +6,8 @@ import routes.reports as reports
 
 app = Flask(__name__)
 
-app.add_url_rule('/register_user', view_func=user.register_user)
-app.add_url_rule('/add_report', view_func=reports.add_report)
+app.add_url_rule('/register_user', methods=["POST"], view_func=user.register_user)
+app.add_url_rule('/add_report', method=["POST"], view_func=reports.add_report)
 
 client = MongoClient('localhost', 27017)
 
