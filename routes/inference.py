@@ -18,13 +18,28 @@ def insert_report(nature: str, location: str, alert_level: str, email: str = "")
     return report_id
 
 
+def get_alert_level_from_nature(nature: str):
+    low = ["vandalism", "shop_lifting", "fighting", "arrest"]
+    mid = ["assault", "abuse", "burglary", "stealing"]
+    high = ["explosion", "shooting", "arson", "road_accident", "robbery"]
+    if nature in low:
+        return "low"
+    elif nature in mid:
+        return "mid"
+    elif nature in high:
+        return "high"
+    else:
+        return "normal"
+
+
 def run_inference():
     try:
+        f = request.files['file']
+
         if crime_found:
-            report_id = insert_report(nature, location, alert_level, request.form['email'])
+            report_id = insert_report(nature, "Manipal", get_alert_level_from_nature(nature), request.form['email'])
             app.reports_collection.update_one({"_id": report_id},
                                               {"$set": {"clip_location": "./video_data/" + secure_filename(report_id) + ".mp4"}})
-            f = request.files['file']
             f.save("./video_data/" + secure_filename(report_id) + ".mp4")
             return {"status": "crime_found", "report_id": report_id}
         else:
