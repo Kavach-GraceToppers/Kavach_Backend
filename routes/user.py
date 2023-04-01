@@ -16,7 +16,8 @@ def insert_user(email: str, phone_no: str, role: str, password: str):
 
 def register_user():
     try:
-        user_id = insert_user(request.form['email'], request.form['phone_no'], request.form['role'], request.form['password'])
+        user_id = insert_user(request.form['email'], request.form['phone_no'], request.form['role'],
+                              request.form['password'])
         return {"status": "success", "user_id": user_id}
     except Exception as error:
         return {"status": str(error)}
