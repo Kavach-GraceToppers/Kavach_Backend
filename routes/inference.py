@@ -13,6 +13,13 @@ import pathlib
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 
+import os
+from twilio.rest import Client
+
+account_sid = "AC11f849e9972cf83ec7c56bc1d96db02b"
+auth_token = "1536e15dc3df0a676c402bbe7bef16c7"
+client = Client(account_sid, auth_token)
+
 model = load_learner('./model.pkl')
 
 
@@ -86,6 +93,24 @@ def get_alert_level_from_nature(nature: str):
         return "normal"
 
 
+def send_sms(nature):
+    body = """
+                    Vigilance Vision\n
+                    {nature} detected at {location}\n
+                    Take required measures. Stay Safe.\n
+                    Helpline: +919480805448\n
+                """
+    body = body.replace("{nature}", nature)
+    body = body.replace("{location}", "Library Building, MIT")
+
+    message = client.messages.create(
+        body=body,
+        from_="+15855132725",
+        to="+919766014952"
+    )
+    print("SMS Sent")
+
+
 def run_inference():
     try:
         f = request.files['file']
@@ -94,14 +119,16 @@ def run_inference():
         save_dir = "x"
         for path in video_paths:
             save_frame(path, save_dir, gap=10)
-
+        print("Frames done")
         nature = get_nature_from_model("x/" + secure_filename(f.filename)[:-4] + "/1010.png")
+        print(nature)
         if nature != "normal":
             report_id = insert_report(nature, "Manipal", get_alert_level_from_nature(nature), request.form['email'])
             app.reports_collection.update_one({"_id": report_id},
                                               {"$set": {"clip_location": "./video_data/" + secure_filename(
                                                   report_id) + ".mp4"}})
             f.save("video_data/" + secure_filename(report_id) + ".mp4")
+            send_sms(nature)
             return {"status": "crime_found", "report_id": report_id, "nature": nature}
         else:
             return {"status": "normal"}
