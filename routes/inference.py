@@ -94,12 +94,7 @@ def get_alert_level_from_nature(nature: str):
 
 
 def send_sms(nature):
-    body = """
-                    Vigilance Vision\n
-                    {nature} detected at {location}\n
-                    Take required measures. Stay Safe.\n
-                    Helpline: +919480805448\n
-                """
+    body = """Vigilance Vision\n{nature} detected at {location}\nTake required measures. Stay Safe.\nHelpline: +919480805448\n"""
     body = body.replace("{nature}", nature)
     body = body.replace("{location}", "Library Building, MIT")
 
@@ -122,16 +117,30 @@ def run_inference():
         print("Frames done")
         nature = get_nature_from_model("x/" + secure_filename(f.filename)[:-4] + "/1010.png")
         print(nature)
-        if nature != "normal":
+        if nature != "NormalVideos":
             report_id = insert_report(nature, "Manipal", get_alert_level_from_nature(nature), request.form['email'])
             app.reports_collection.update_one({"_id": report_id},
                                               {"$set": {"clip_location": "./video_data/" + secure_filename(
                                                   report_id) + ".mp4"}})
             f.save("video_data/" + secure_filename(report_id) + ".mp4")
             send_sms(nature)
-            return {"status": "crime_found", "report_id": report_id, "nature": nature}
+            return """
+            <html>
+               <body>
+                  <h1>Crime Found</h1>
+                  <h2>Nature: {0}</h2>
+                  <h2>Location: {1}</h2>
+               </body>
+            </html>
+            """.format(nature, "Library Building, MIT")
         else:
-            return {"status": "normal"}
+            return """
+                <html>
+               <body>
+                  <h1>No Crime Found</h1>
+               </body>
+            </html>
+            """
     except Exception as error:
         return {"status": "error", "error": str(error)}
 

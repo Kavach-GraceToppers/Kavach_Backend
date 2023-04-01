@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from pymongo import MongoClient
 
 import routes.user as user
@@ -19,3 +19,20 @@ client = MongoClient('localhost', 27017)
 db = client.kavach
 reports_collection = db.reports_collection
 users_collection = db.users_collection
+
+
+@app.route('/upload')
+def upload_file():
+    return """
+            <html>
+   <body>
+      <form action = "http://localhost:5000/run_inference" method = "POST"
+         enctype = "multipart/form-data">
+         <input type = "file" name = "file" />
+         <br>
+        <input type = "text" hidden name = "email" value="varun@gmail.com"/>
+         <input type = "submit"/>
+      </form>
+   </body>
+</html>
+    """
