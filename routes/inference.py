@@ -4,13 +4,14 @@ from flask import request
 from werkzeug.utils import secure_filename
 
 
-def insert_report(nature: str, location: str, alert_level: str, clip_location: str = ""):
+def insert_report(nature: str, location: str, alert_level: str, email: str = ""):
     report = app.reports_collection.insert_one({
         "nature": nature,
         "location": location,
         "time": int(time.time()),
         "alert_level": alert_level,
-        "clip_location": clip_location
+        "email": email,
+        "clip_location": ""
     })
     report_id = str(report.inserted_id)
     print("Inserted: " + str(report_id))
@@ -20,7 +21,7 @@ def insert_report(nature: str, location: str, alert_level: str, clip_location: s
 def run_inference():
     try:
         if crime_found:
-            report_id = insert_report(nature, location, alert_level)
+            report_id = insert_report(nature, location, alert_level, request.form['email'])
             app.reports_collection.update_one({"_id": report_id},
                                               {"$set": {"clip_location": "./video_data/" + secure_filename(report_id) + ".mp4"}})
             f = request.files['file']
