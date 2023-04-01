@@ -17,12 +17,17 @@ def insert_report(nature: str, location: str, alert_level: str, clip_location: s
     return report_id
 
 
-def add_report():
+def run_inference():
     try:
-        report_id = insert_report(request.form['nature'], request.form['location'], request.form['alert_level'],
-                                  request.form['clip_location'])
-        f = request.files['file']
-        f.save("./video_data/" + secure_filename(request.form['report_id']) + ".mp4")
-        return {"status": "success", "report_id": report_id}
+        if crime_found:
+            report_id = insert_report(nature, location, alert_level)
+            app.reports_collection.update_one({"_id": report_id},
+                                              {"$set": {"clip_location": "./video_data/" + secure_filename(report_id) + ".mp4"}})
+            f = request.files['file']
+            f.save("./video_data/" + secure_filename(report_id) + ".mp4")
+            return {"status": "crime_found", "report_id": report_id}
+        else:
+            return {"status": "normal"}
     except Exception as error:
         return {"status": "error", "error": str(error)}
+
