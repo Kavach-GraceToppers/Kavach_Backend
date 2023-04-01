@@ -4,9 +4,9 @@ from werkzeug.utils import secure_filename
 
 
 def get_reports():
-    email = request.form['email']
-    ps = request.form['password']
     try:
+        email = request.form['email']
+        ps = request.form['password']
         user = app.users_collection.find_one({"email": email, "password": ps})
         if user is not None:
             if user["role"] == "public":
