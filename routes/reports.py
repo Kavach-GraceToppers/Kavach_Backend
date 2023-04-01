@@ -22,4 +22,4 @@ def add_report():
                                   request.form['clip_location'])
         return {"status": "success", "report_id": report_id}
     except Exception as error:
-        return {"status": str(error)}
+        return {"status": "error", "error": str(error)}
