@@ -12,7 +12,7 @@ def insert_report(nature: str, location: str, alert_level: str, clip_location: s
         "clip_location": clip_location
     })
     report_id = report.inserted_id
-    print("Inserted: " + report_id)
+    print("Inserted: " + str(report_id))
     return report_id
 
 
