@@ -4,6 +4,11 @@ from flask import request
 from werkzeug.utils import secure_filename
 from fastai.vision.all import *
 
+import os
+import cv2
+from glob import glob
+from PIL import Image
+
 import pathlib
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
@@ -13,6 +18,44 @@ model = load_learner('./model.pkl')
 
 def get_nature_from_model(path: str):
     return model.predict(path)[0]
+
+
+def create_dir(path):
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+    except OSError:
+        print(f"ERROR: creating directory with name {path}")
+
+
+def save_frame(video_path, save_dir, gap=10):
+    name = video_path.split("/")[-1].split(".")[0]
+    save_path = os.path.join(save_dir, name)
+    create_dir(save_path)
+
+    cap = cv2.VideoCapture(video_path)
+    idx = 0
+
+    while True:
+        ret, frame = cap.read()
+
+        if ret == False:
+            cap.release()
+            break
+
+        if idx == 0:
+            cv2.imwrite(f"{save_path}/{idx}.png", frame)
+            img = Image.open(f'{save_path}/{idx}.png')
+            img = img.resize((64, 64), Image.ANTIALIAS)
+            img.save(f'{save_path}/{idx}.png')
+        else:
+            if idx % gap == 0:
+                cv2.imwrite(f"{save_path}/{idx}.png", frame)
+                img = Image.open(f'{save_path}/{idx}.png')
+                img = img.resize((64, 64), Image.ANTIALIAS)
+                img.save(f'{save_path}/{idx}.png')
+
+        idx += 1
 
 
 def insert_report(nature: str, location: str, alert_level: str, email: str = ""):
@@ -30,14 +73,14 @@ def insert_report(nature: str, location: str, alert_level: str, email: str = "")
 
 
 def get_alert_level_from_nature(nature: str):
-    low = ["vandalism", "shop_lifting", "fighting", "arrest"]
+    low = ["vandalism", "shoplifting", "fighting", "arrest"]
     mid = ["assault", "abuse", "burglary", "stealing"]
-    high = ["explosion", "shooting", "arson", "road_accident", "robbery"]
-    if nature in low:
+    high = ["explosion", "shooting", "arson", "roadaccidents", "robbery"]
+    if nature.lower() in low:
         return "low"
-    elif nature in mid:
+    elif nature.lower() in mid:
         return "mid"
-    elif nature in high:
+    elif nature.lower() in high:
         return "high"
     else:
         return "normal"
@@ -46,14 +89,20 @@ def get_alert_level_from_nature(nature: str):
 def run_inference():
     try:
         f = request.files['file']
-        nature = get_nature_from_model()
+        f.save(secure_filename(f.filename))
+        video_paths = glob(secure_filename(f.filename))
+        save_dir = "x"
+        for path in video_paths:
+            save_frame(path, save_dir, gap=10)
+
+        nature = get_nature_from_model("x/" + secure_filename(f.filename)[:-4] + "/1010.png")
         if nature != "normal":
             report_id = insert_report(nature, "Manipal", get_alert_level_from_nature(nature), request.form['email'])
             app.reports_collection.update_one({"_id": report_id},
                                               {"$set": {"clip_location": "./video_data/" + secure_filename(
                                                   report_id) + ".mp4"}})
-            f.save("./video_data/" + secure_filename(report_id) + ".mp4")
-            return {"status": "crime_found", "report_id": report_id}
+            f.save("video_data/" + secure_filename(report_id) + ".mp4")
+            return {"status": "crime_found", "report_id": report_id, "nature": nature}
         else:
             return {"status": "normal"}
     except Exception as error:
