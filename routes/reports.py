@@ -1,6 +1,5 @@
 import app
 from flask import request
-from werkzeug.utils import secure_filename
 
 
 def get_reports():
@@ -10,9 +9,16 @@ def get_reports():
         user = app.users_collection.find_one({"email": email, "password": ps})
         if user is not None:
             if user["role"] == "public":
-                return app.reports_collection.findMany({})
+                reports = app.reports_collection.find({})
             else:
-                return app.reports_collection.findMany({"email": email})
+                reports = app.reports_collection.find({"email": email})
+            result = []
+            for report in reports:
+                report_id = str(report["_id"])
+                del(report["_id"])
+                report["id"] = report_id
+                result.append(report)
+            return {"status": "success", "result: ": result}
         else:
             return "User cannot be found."
     except Exception as error:
