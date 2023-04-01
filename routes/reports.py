@@ -1,10 +1,10 @@
-from app import reports_collection
+import app
 import time
 from flask import request
 
 
 def insert_report(nature: str, location: str, alert_level: str, clip_location: str = ""):
-    report = reports_collection.insert_one({
+    report = app.reports_collection.insert_one({
         "nature": nature,
         "location": location,
         "time": int(time.time()),

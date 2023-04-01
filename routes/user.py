@@ -1,9 +1,9 @@
-from app import users_collection
+import app
 from flask import request
 
 
 def insert_user(email: str, phone_no: str, role: str, password: str):
-    user = users_collection.insert_one({
+    user = app.users_collection.insert_one({
         "email": email,
         "phone_no": phone_no,
         "role": role,
@@ -21,5 +21,3 @@ def register_user():
         return {"status": "success", "user_id": user_id}
     except Exception as error:
         return {"status": str(error)}
-
-
